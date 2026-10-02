@@ -62,73 +62,27 @@ if ! ifconfig "${DNS_INTERFACE}" |
 fi
 
 # ============================================================
-# Render configuration
+# Render configuration — substitute all values from .env
 # ============================================================
 
 TMP_CONFIG="$(make_temp_file)"
 trap 'cleanup_temp_file "${TMP_CONFIG}"' EXIT
 
-awk \
-    -v listen_address="127.0.0.1,${MAC_IP_1_DNS}" \
-    -v interface_name="${DNS_INTERFACE}" \
-    -v app_domain="${APP_DOMAIN}" \
-    -v api_domain="${API_DOMAIN}" \
-    -v nginx_ip="${MAC_IP_2_NGINX_LOAD_BALANCER}" '
-BEGIN {
-    found_interface = 0
-    found_listen = 0
-    found_app = 0
-    found_api = 0
-}
+cp "${DNS_REPO_CONFIG}" "${TMP_CONFIG}"
 
-{
-    if ($0 ~ /^[[:space:]]*interface[[:space:]]*=/) {
-        print "interface=" interface_name
-        found_interface = 1
-        next
-    }
+# Rewrite each directive line in full, matching by key pattern.
+# This works for both __PLACEHOLDER__ tokens (first run) and
+# real values (subsequent runs when IPs change).
+sed -i '' \
+    -e "s|^interface=.*|interface=${DNS_INTERFACE}|" \
+    -e "s|^listen-address=.*|listen-address=127.0.0.1,${MAC_IP_1_DNS}|" \
+    -e "s|^address=/__APP_DOMAIN__/.*|address=/${APP_DOMAIN}/${MAC_IP_2_NGINX_LOAD_BALANCER}|" \
+    -e "s|^address=/__API_DOMAIN__/.*|address=/${API_DOMAIN}/${MAC_IP_2_NGINX_LOAD_BALANCER}|" \
+    -e "s|^address=/${APP_DOMAIN}/.*|address=/${APP_DOMAIN}/${MAC_IP_2_NGINX_LOAD_BALANCER}|" \
+    -e "s|^address=/${API_DOMAIN}/.*|address=/${API_DOMAIN}/${MAC_IP_2_NGINX_LOAD_BALANCER}|" \
+    "${TMP_CONFIG}"
 
-    if ($0 ~ /^[[:space:]]*listen-address[[:space:]]*=/) {
-        print "listen-address=" listen_address
-        found_listen = 1
-        next
-    }
 
-    if ($0 ~ /^[[:space:]]*address[[:space:]]*=[[:space:]]*\/.*\/.*$/) {
-        if ($0 ~ "address=/"+app_domain+"/") {
-            print "address=/" app_domain "/" nginx_ip
-            found_app = 1
-            next
-        }
-
-        if ($0 ~ "address=/"+api_domain+"/") {
-            print "address=/" api_domain "/" nginx_ip
-            found_api = 1
-            next
-        }
-    }
-
-    print
-}
-
-END {
-    if (!found_interface) {
-        print "interface=" interface_name
-    }
-
-    if (!found_listen) {
-        print "listen-address=" listen_address
-    }
-
-    if (!found_app) {
-        print "address=/" app_domain "/" nginx_ip
-    }
-
-    if (!found_api) {
-        print "address=/" api_domain "/" nginx_ip
-    }
-}
-' "${DNS_REPO_CONFIG}" > "${TMP_CONFIG}"
 
 # ============================================================
 # Validate generated dnsmasq configuration
