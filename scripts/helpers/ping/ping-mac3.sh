@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # shellcheck disable=SC1091
-source "${ROOT_DIR}/scripts/common.sh"
+source "${ROOT_DIR}/scripts/helpers/common.sh"
 
 # ============================================================
 # Load environment
@@ -24,14 +24,14 @@ validate_ip MAC_IP_2_NGINX_LOAD_BALANCER
 validate_ip MAC_IP_3_BACKEND_A
 validate_ip MAC_IP_4_BACKEND_B
 
-require_local_ipv4 MAC_IP_2_NGINX_LOAD_BALANCER
+require_local_ipv4 MAC_IP_3_BACKEND_A
 
 # ============================================================
 # Evidence output
 # ============================================================
 
 EVIDENCE_DIR="${ROOT_DIR}/evidence/LAN"
-OUTPUT_FILE="${EVIDENCE_DIR}/ping-Mac2-to-all.txt"
+OUTPUT_FILE="${EVIDENCE_DIR}/ping-Mac3-to-all.txt"
 
 mkdir -p "${EVIDENCE_DIR}"
 
@@ -44,9 +44,10 @@ exec > >(tee "${OUTPUT_FILE}") 2>&1
 echo "============================================================"
 echo " Computer Networks Project — LAN Connectivity Evidence"
 echo "============================================================"
-echo " Source machine : Mac 2"
-echo " Role           : NGINX / Reverse Proxy / Load Balancer"
-echo " Source IP      : ${MAC_IP_2_NGINX_LOAD_BALANCER}"
+echo " Source machine : Mac 3"
+echo " Role           : Backend A"
+echo " Source IP      : ${MAC_IP_3_BACKEND_A}"
+echo " Backend port   : ${BACKEND_A_PORT}"
 echo " Date / Time    : $(date)"
 echo "============================================================"
 echo ""
@@ -57,13 +58,13 @@ echo ""
 
 TARGET_NAMES=(
     "Mac 1 — DNS Server"
-    "Mac 3 — Backend A"
+    "Mac 2 — NGINX / Load Balancer"
     "Mac 4 — Backend B"
 )
 
 TARGET_IPS=(
     "${MAC_IP_1_DNS}"
-    "${MAC_IP_3_BACKEND_A}"
+    "${MAC_IP_2_NGINX_LOAD_BALANCER}"
     "${MAC_IP_4_BACKEND_B}"
 )
 
@@ -99,9 +100,9 @@ done
 # ============================================================
 
 echo "============================================================"
-echo " SUMMARY — Mac 2 → all machines"
+echo " SUMMARY — Mac 3 → all machines"
 echo "============================================================"
-echo " Source IP : ${MAC_IP_2_NGINX_LOAD_BALANCER}  (Mac 2 — NGINX Load Balancer)"
+echo " Source IP : ${MAC_IP_3_BACKEND_A}  (Mac 3 — Backend A)"
 echo " Passed    : ${PASS_COUNT} / 3"
 echo " Failed    : ${FAIL_COUNT} / 3"
 echo " Status    : $([ "${FAILED}" -eq 0 ] && echo "ALL PASS" || echo "SOME FAILURES — check above")"

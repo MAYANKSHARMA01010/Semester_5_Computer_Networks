@@ -14,7 +14,7 @@ echo ""
 
 echo ">>> Step 1/1 — Configuring dnsmasq..."
 echo ""
-bash "${SCRIPT_DIR}/mac1-update-dns.sh"
+bash "${SCRIPT_DIR}/helpers/mac1-update-dns.sh"
 
 echo ""
 echo "============================================================"

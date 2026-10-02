@@ -14,12 +14,12 @@ echo ""
 
 echo ">>> Step 1/2 — Configuring client DNS to point at Mac 1..."
 echo ""
-bash "${SCRIPT_DIR}/configure-client-dns.sh"
+bash "${SCRIPT_DIR}/helpers/configure-client-dns.sh"
 
 echo ""
 echo ">>> Step 2/2 — Starting Backend B..."
 echo ""
-bash "${SCRIPT_DIR}/mac4-start-backend.sh"
+bash "${SCRIPT_DIR}/helpers/mac4-start-backend.sh"
 
 echo ""
 echo "============================================================"
