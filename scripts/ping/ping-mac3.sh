@@ -27,7 +27,7 @@ validate_ip MAC_IP_4_BACKEND_B
 require_local_ipv4 MAC_IP_3_BACKEND_A
 
 # ============================================================
-# Output
+# Evidence output
 # ============================================================
 
 EVIDENCE_DIR="${ROOT_DIR}/evidence/LAN"
@@ -37,51 +37,77 @@ mkdir -p "${EVIDENCE_DIR}"
 
 exec > >(tee "${OUTPUT_FILE}") 2>&1
 
-echo "============================================================"
-echo "Computer Networks Project - LAN Connectivity Evidence"
-echo "============================================================"
-echo "Machine        : Mac 3"
-echo "Role           : Backend A"
-echo "Local IP       : ${MAC_IP_3_BACKEND_A}"
-echo "Backend Port   : ${BACKEND_A_PORT}"
-echo "Date           : $(date)"
-echo "============================================================"
-echo
+# ============================================================
+# Header
+# ============================================================
 
-declare -A TARGETS=(
-    ["Mac 1 - DNS"]="${MAC_IP_1_DNS}"
-    ["Mac 2 - NGINX"]="${MAC_IP_2_NGINX_LOAD_BALANCER}"
-    ["Mac 4 - Backend B"]="${MAC_IP_4_BACKEND_B}"
+echo "============================================================"
+echo " Computer Networks Project — LAN Connectivity Evidence"
+echo "============================================================"
+echo " Source machine : Mac 3"
+echo " Role           : Backend A"
+echo " Source IP      : ${MAC_IP_3_BACKEND_A}"
+echo " Backend port   : ${BACKEND_A_PORT}"
+echo " Date / Time    : $(date)"
+echo "============================================================"
+echo ""
+
+# ============================================================
+# Targets (parallel arrays — no associative array / set -u clash)
+# ============================================================
+
+TARGET_NAMES=(
+    "Mac 1 — DNS Server"
+    "Mac 2 — NGINX / Load Balancer"
+    "Mac 4 — Backend B"
+)
+
+TARGET_IPS=(
+    "${MAC_IP_1_DNS}"
+    "${MAC_IP_2_NGINX_LOAD_BALANCER}"
+    "${MAC_IP_4_BACKEND_B}"
 )
 
 FAILED=0
+PASS_COUNT=0
+FAIL_COUNT=0
 
-for TARGET_NAME in "${!TARGETS[@]}"; do
-    TARGET_IP="${TARGETS[$TARGET_NAME]}"
+for i in "${!TARGET_NAMES[@]}"; do
+    TARGET_NAME="${TARGET_NAMES[$i]}"
+    TARGET_IP="${TARGET_IPS[$i]}"
 
     echo "------------------------------------------------------------"
-    echo "Testing ${TARGET_NAME}"
-    echo "Target IP: ${TARGET_IP}"
+    echo " Target : ${TARGET_NAME}"
+    echo " IP     : ${TARGET_IP}"
     echo "------------------------------------------------------------"
 
     if ping -c 4 "${TARGET_IP}"; then
-        echo "RESULT: PASS"
+        echo ""
+        echo " >>> RESULT : PASS — ${TARGET_NAME} (${TARGET_IP}) is reachable"
+        PASS_COUNT=$(( PASS_COUNT + 1 ))
     else
-        echo "RESULT: FAIL"
+        echo ""
+        echo " >>> RESULT : FAIL — ${TARGET_NAME} (${TARGET_IP}) is UNREACHABLE"
+        FAIL_COUNT=$(( FAIL_COUNT + 1 ))
         FAILED=1
     fi
 
-    echo
+    echo ""
 done
 
+# ============================================================
+# Summary
+# ============================================================
+
 echo "============================================================"
-echo "Mac 3 LAN TEST COMPLETE"
-echo "Evidence saved to:"
-echo "${OUTPUT_FILE}"
+echo " SUMMARY — Mac 3 → all machines"
+echo "============================================================"
+echo " Source IP : ${MAC_IP_3_BACKEND_A}  (Mac 3 — Backend A)"
+echo " Passed    : ${PASS_COUNT} / 3"
+echo " Failed    : ${FAIL_COUNT} / 3"
+echo " Status    : $([ "${FAILED}" -eq 0 ] && echo "ALL PASS" || echo "SOME FAILURES — check above")"
+echo "============================================================"
+echo " Evidence saved to: ${OUTPUT_FILE}"
 echo "============================================================"
 
-if (( FAILED != 0 )); then
-    exit 1
-fi
-
-exit 0
+exit "${FAILED}"
