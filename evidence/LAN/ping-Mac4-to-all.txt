@@ -1,0 +1,71 @@
+============================================================
+ Computer Networks Project — LAN Connectivity Evidence
+============================================================
+ Source machine : Mac 4
+ Role           : Backend B
+ Source IP      : 10.7.5.213
+ Backend port   : 3002
+ Date / Time    : Fri Oct  2 13:43:43 IST 2026
+============================================================
+
+------------------------------------------------------------
+ Target : Mac 1 — DNS Server
+ IP     : 10.7.6.132
+------------------------------------------------------------
+ping: sendto: No route to host
+ping: sendto: No route to host
+PING 10.7.6.132 (10.7.6.132): 56 data bytes
+Request timeout for icmp_seq 0
+ping: sendto: No route to host
+Request timeout for icmp_seq 1
+Request timeout for icmp_seq 2
+64 bytes from 10.7.6.132: icmp_seq=3 ttl=64 time=29.025 ms
+
+--- 10.7.6.132 ping statistics ---
+4 packets transmitted, 1 packets received, 75.0% packet loss
+round-trip min/avg/max/stddev = 29.025/29.025/29.025/0.000 ms
+
+ >>> RESULT : PASS — Mac 1 — DNS Server (10.7.6.132) is reachable
+
+------------------------------------------------------------
+ Target : Mac 2 — NGINX / Load Balancer
+ IP     : 10.7.5.151
+------------------------------------------------------------
+PING 10.7.5.151 (10.7.5.151): 56 data bytes
+64 bytes from 10.7.5.151: icmp_seq=0 ttl=64 time=10.801 ms
+64 bytes from 10.7.5.151: icmp_seq=1 ttl=64 time=6.836 ms
+64 bytes from 10.7.5.151: icmp_seq=2 ttl=64 time=6.309 ms
+64 bytes from 10.7.5.151: icmp_seq=3 ttl=64 time=6.601 ms
+
+--- 10.7.5.151 ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 6.309/7.637/10.801/1.836 ms
+
+ >>> RESULT : PASS — Mac 2 — NGINX / Load Balancer (10.7.5.151) is reachable
+
+------------------------------------------------------------
+ Target : Mac 3 — Backend A
+ IP     : 10.7.21.15
+------------------------------------------------------------
+PING 10.7.21.15 (10.7.21.15): 56 data bytes
+64 bytes from 10.7.21.15: icmp_seq=0 ttl=64 time=13.764 ms
+64 bytes from 10.7.21.15: icmp_seq=1 ttl=64 time=118.705 ms
+64 bytes from 10.7.21.15: icmp_seq=2 ttl=64 time=92.780 ms
+64 bytes from 10.7.21.15: icmp_seq=3 ttl=64 time=138.528 ms
+
+--- 10.7.21.15 ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 13.764/90.944/138.528/47.421 ms
+
+ >>> RESULT : PASS — Mac 3 — Backend A (10.7.21.15) is reachable
+
+============================================================
+ SUMMARY — Mac 4 → all machines
+============================================================
+ Source IP : 10.7.5.213  (Mac 4 — Backend B)
+ Passed    : 3 / 3
+ Failed    : 0 / 3
+ Status    : ALL PASS
+============================================================
+ Evidence saved to: /Users/satyamswarnakar/network-project/Semester_5_Computer_Networks/evidence/LAN/ping-Mac4-to-all.txt
+============================================================
