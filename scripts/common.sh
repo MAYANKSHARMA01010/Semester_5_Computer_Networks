@@ -220,7 +220,8 @@ backup_file() {
     sudo cp -p "${source_path}" "${backup_path}"
     sudo chown "$(id -u):$(id -g)" "${backup_path}"
 
-    log "Backup created: ${backup_path}"
+    # Print log to stderr so that callers using $(...) capture only the path.
+    printf '[INFO] Backup created: %s\n' "${backup_path}" >&2
 
     printf '%s\n' "${backup_path}"
 }

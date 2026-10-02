@@ -102,7 +102,38 @@ END {
 }
 ' "${NGINX_REPO_CONFIG}" > "${TMP_CONFIG}"
 
+# ============================================================
+# Substitute __PLACEHOLDER__ tokens with real values from .env
+# ============================================================
+
+sed -i '' \
+    -e "s|__BREW_PREFIX__|${BREW_PREFIX}|g" \
+    -e "s|__MAC_IP_3_BACKEND_A__|${MAC_IP_3_BACKEND_A}|g" \
+    -e "s|__MAC_IP_4_BACKEND_B__|${MAC_IP_4_BACKEND_B}|g" \
+    -e "s|__BACKEND_A_PORT__|${BACKEND_A_PORT}|g" \
+    -e "s|__BACKEND_B_PORT__|${BACKEND_B_PORT}|g" \
+    "${TMP_CONFIG}"
+
 log "Generated NGINX configuration."
+
+# ============================================================
+# Auto-generate self-signed SSL certificate if missing
+# ============================================================
+
+SSL_DIR="${BREW_PREFIX}/etc/nginx/ssl"
+SSL_CERT="${SSL_DIR}/team1.crt"
+SSL_KEY="${SSL_DIR}/team1.key"
+
+if [[ ! -f "${SSL_CERT}" || ! -f "${SSL_KEY}" ]]; then
+    log "SSL certificate not found — generating self-signed cert..."
+    sudo mkdir -p "${SSL_DIR}"
+    sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout "${SSL_KEY}" \
+        -out "${SSL_CERT}" \
+        -subj "/CN=team1.test/O=ComputerNetworksProject" \
+        2>/dev/null
+    log "Self-signed certificate generated at ${SSL_CERT}"
+fi
 
 # ============================================================
 # Backup
