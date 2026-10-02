@@ -75,7 +75,7 @@ BEGIN {
     }
 
     if (in_upstream &&
-        $0 ~ /^[[:space:]]*server[[:space:]]+[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[[:space:]]*;/) {
+        $0 ~ /^[[:space:]]*server[[:space:]]+[^{};]+:[^{};]+;/) {
 
         backend_index++
 
