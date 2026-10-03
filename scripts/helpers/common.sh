@@ -8,7 +8,14 @@ IFS=$'\n\t'
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+# Ensure Homebrew binaries are in PATH if available
+if [[ -d "/opt/homebrew/bin" && ":${PATH}:" != *":/opt/homebrew/bin:"* ]]; then
+    export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:${PATH}"
+elif [[ -d "/usr/local/bin" && ":${PATH}:" != *":/usr/local/bin:"* ]]; then
+    export PATH="/usr/local/bin:/usr/local/sbin:${PATH}"
+fi
 
 ENV_FILE="${ENV_FILE:-${ROOT_DIR}/.env}"
 BACKUP_DIR="${BACKUP_DIR:-${ROOT_DIR}/.runtime-backups}"
