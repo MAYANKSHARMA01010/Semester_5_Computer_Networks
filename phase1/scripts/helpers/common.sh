@@ -9,6 +9,7 @@ IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 # Ensure Homebrew binaries are in PATH if available
 if [[ -d "/opt/homebrew/bin" && ":${PATH}:" != *":/opt/homebrew/bin:"* ]]; then
@@ -17,7 +18,15 @@ elif [[ -d "/usr/local/bin" && ":${PATH}:" != *":/usr/local/bin:"* ]]; then
     export PATH="/usr/local/bin:/usr/local/sbin:${PATH}"
 fi
 
-ENV_FILE="${ENV_FILE:-${ROOT_DIR}/.env}"
+if [[ -z "${ENV_FILE:-}" ]]; then
+    if [[ -f "${ROOT_DIR}/.env" ]]; then
+        ENV_FILE="${ROOT_DIR}/.env"
+    elif [[ -f "${REPO_DIR}/.env" ]]; then
+        ENV_FILE="${REPO_DIR}/.env"
+    else
+        ENV_FILE="${ROOT_DIR}/.env"
+    fi
+fi
 BACKUP_DIR="${BACKUP_DIR:-${ROOT_DIR}/.runtime-backups}"
 
 # Keep generated files private by default.
