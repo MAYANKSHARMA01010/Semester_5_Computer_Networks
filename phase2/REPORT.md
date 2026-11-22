@@ -1,0 +1,40 @@
+# Phase 2 final report · Harden, Recover, and Troubleshoot
+
+Phase 1 established a four-Mac private LAN service with one DNS resolver, one TLS edge, two HTTP backends and ETag validation. Phase 2 added a backup resolver, short DNS TTLs, backend firewall isolation, passive upstream failover verification and a temporary standby TLS edge. The [architecture](../docs/phase2-architecture.md) shows both client routing paths and the [configuration runbook](README.md) describes how to reproduce them.
+
+## Rehearsal results · November 22, 2026
+
+These results are reported in the team handoff. The [evidence checklist](../evidence/README.md) maps each result to the original transcript or a fresh capture.
+
+| Extension | Observed result | Evidence or demonstration still needed |
+| --- | --- | --- |
+| A · Backup DNS | Mac 4 resolved both project names and forwarded an external lookup. With Mac 1 stopped, [Mac 2's default query](../evidence/Phase-2/A-Backup-DNS/failover.png) returned Mac 2's IP via Mac 4. [Mac 3's rehearsal settings](../evidence/Phase-2/A-Backup-DNS/client-dns-mac3-rehearsal.png) showed the primary resolver. | Capture primary and backup resolver order on Mac 3 and any other designated clients. |
+| B · DNS TTL | Both resolvers advertised 30 seconds. In the [automatic-expiry transcript](../evidence/Phase-2/B-TTL/automatic-expiry.png), primary DNS first returned `10.7.28.47` at 23:56:02 IST. Ankit's Mac still returned `10.7.2.152` at 23:56:36 and first showed the new IP at 23:56:38 without another flush. The separate [manual-flush excerpt](../evidence/Phase-2/B-TTL/manual-flush.png) shows the observed IP changing from `10.7.28.47` to `10.7.2.152`. | The recorded excerpt contains the before and after results. |
+| C · Isolation | [Mac 2 reached both backend ports](../evidence/Phase-2/C-Isolation/allowed-mac2.png) with HTTP 200 and [Mac 1's direct connections](../evidence/Phase-2/C-Isolation/blocked-mac1.png) both timed out. With isolation active, [six requests over HTTPS](../evidence/Phase-2/C-Isolation/edge-still-serves.png) returned HTTP 200 through Mac 2, three from each backend. The [Mac 3](../evidence/Phase-2/C-Isolation/pf-mac3.png) and [Mac 4](../evidence/Phase-2/C-Isolation/pf-mac4.png) PF transcripts show the allow and drop rules. Backup DNS on Mac 4 stayed reachable during rehearsal. | Restore the original PF state after the migration demo and save both transcripts. |
+| D · Backend failover | All 18 requests returned HTTP 200. The [baseline](../evidence/Phase-2/D-Backend-Failover/baseline.png) showed three responses per backend. All six requests during the [outage](../evidence/Phase-2/D-Backend-Failover/backend-a-down.png) went to B. After A restarted, the [recovery test](../evidence/Phase-2/D-Backend-Failover/backend-a-recovered.png) showed two responses from A and four from B. | Mac 3's [stop/start excerpt](../evidence/Phase-2/D-Backend-Failover/backend-a-stop-start.png) is saved. |
+| E · Edge migration | The [standby preflight](../evidence/Phase-2/E-Edge-Migration/preflight-both-backends.png) returned six verified HTTP 200 responses, three from each backend. At 01:19:52 IST on November 23, [fresh Mac 2 HTTPS](../evidence/Phase-2/E-Edge-Migration/fresh-standby-overlap.png) returned HTTP 200 from standby `10.7.2.152`, while [cached Mac 3 HTTPS](../evidence/Phase-2/E-Edge-Migration/cached-old-edge.png) returned HTTP 200 from primary `10.7.28.47`. Mac 3 first reached standby at 01:19:55 without another flush. The [latest DNS rollback](../evidence/Phase-2/E-Edge-Migration/rollback-after-overlap-dns.png) restored both resolver answers. The [earlier rollback](../evidence/Phase-2/E-Edge-Migration/rollback.png) also verified HTTPS on the primary edge. [Rehearsal cleanup](../evidence/Phase-2/E-Edge-Migration/rehearsal-cleanup.png) records the old standby stop and firewall timeout. | Verify HTTPS after the latest rollback, stop the standby and remove its temporary Backend B access. |
+| F · Faculty fault | The [team's TLS troubleshooting rehearsal](../evidence/Phase-2/F-Troubleshooting/rehearsal-tls-hostname.md) documents DNS and TCP checks, a hostname failure, and a successful verified HTTPS retest. | Record the faculty-injected fault, isolated layer, fix or explanation, and retest during evaluation. Individual viva remains live. |
+
+## Troubleshooting findings
+
+DNS resolution can remain healthy during a backend failure. Compare the system lookup with direct queries to each resolver to isolate client cache or resolver selection. Once the resolved address is known, test TCP 8443. Then verify TLS with the domain as SNI and the correct public certificate, and finally inspect the HTTP status and `X-Backend` header. An edge-generated 502 can appear with healthy DNS and TLS when both upstreams are unavailable. Foreground DNS processes should be checked for port ownership before starting a second instance.
+
+The [initial primary HTTPS check](../evidence/Phase-2/HTTPS/primary-hostname-mismatch.png) reached Mac 2 at `10.7.28.47:8443` and failed hostname verification. The original certificate identified `team1.test` and lacked a Subject Alternative Name for `app.team1.test`. The setup script now includes both project hostnames when it creates a certificate. On November 23, Mac 2 started NGINX with a reissued certificate covering `app.team1.test` and `api.team1.test`. The retest used the project certificate with normal DNS resolution and verified `app.team1.test`. NGINX returned HTTP 200 and `X-Backend: A`.
+
+The [cache validation transcript](../evidence/Phase-2/HTTPS/cache-headers-and-304.png) shows HTTP 200 from Backend B with `Cache-Control: public, max-age=60` and `ETag: "status-v1"`. The conditional GET with that ETag returned HTTP 304 from Backend A. Both servers use the same fixed ETag for the lab endpoint, though their JSON bodies contain different backend IDs.
+
+The [Phase 2 Wireshark capture](../evidence/Phase-2/Packets/protocol-flow.pcapng) combines the DNS query and answer captured on Mac 2's Wi-Fi with TCP and TLS records captured on Mac 2's loopback interface. The [packet screenshots](../evidence/README.md#wireshark) show the DNS answer, the TCP three-way handshake and the TLS Client and Server Hello. The browser stopped at the certificate trust warning. The verified HTTP 200 was recorded separately with curl.
+
+## Learning by extension
+
+**A.** Two resolvers with matching records can preserve client name lookup during primary DNS loss. The default-client query during the outage demonstrated that the backup was selected under failure.
+
+**B.** A resolver can publish a changed record while a client's OS cache still supplies the old address. A low TTL limits that window. A local cache flush lets that one client request the newer answer sooner.
+
+**C.** Backend ports can remain reachable to the edge while Wi-Fi clients are blocked from direct HTTP access. A dedicated PF anchor and an enable reference let each backend Mac restore its original firewall setup after the demo.
+
+**D.** NGINX can retry an eligible request on a healthy upstream and resume distributing traffic after recovery. Mac 2 remains the sole normal edge. Automatic edge failover would need a health-aware mechanism to direct clients to a redundant edge, with matching TLS and backend access on both edges.
+
+**E.** DNS cutover requires preparing standby TLS and upstream connectivity before changing the app record on both resolvers. Both edges need to serve during the TTL window while clients refresh their caches. Rollback restores DNS and removes temporary firewall access.
+
+**F.** Testing DNS, TCP, TLS and HTTP in order narrows the likely cause before changing configuration. The final report can include the specific fault and outcome once the faculty trial takes place.

@@ -51,3 +51,16 @@ This document details the network inventory, IP assignments, and service archite
 - Mac 1 is the DNS server.
 - TLS termination occurs at Mac 2 using certificates valid for `app.team1.test` and `api.team1.test`.
 - NGINX routes traffic across Backend A (`10.7.21.15:3001`) and Backend B (`10.7.5.213:3002`).
+
+## Phase 2 rehearsal addresses · November 22, 2026
+
+These were the active rehearsal assignments. Refresh them from each Mac before another run. The tables above document the earlier Phase 1 addresses.
+
+| Mac | Operator | Wi-Fi IPv4 | Service |
+| --- | --- | --- | --- |
+| Mac 1 | Aman Soni | `10.7.1.188` | Primary dnsmasq, UDP/TCP 53 |
+| Mac 2 | Mayank Sharma | `10.7.28.47` | Primary NGINX, HTTPS TCP 8443 |
+| Mac 3 | Ankit | `10.7.2.152` | Backend A, TCP 3001. Temporary standby NGINX, HTTPS TCP 8443 |
+| Mac 4 | Satyam Swarnakar | `10.7.29.127` | Backend B, TCP 3002. Backup dnsmasq, UDP/TCP 53 |
+
+Both DNS servers serve `app.team1.test` and `api.team1.test` with TTL 30 and Mac 2 as their normal target. The cutover changes only the app record to Mac 3. See the [Phase 2 topology and protocol flow](phase2-architecture.md). Capture the interface, prefix/netmask, gateway and Wi-Fi MAC address locally with the inventory instructions in the [evidence checklist](../evidence/README.md).

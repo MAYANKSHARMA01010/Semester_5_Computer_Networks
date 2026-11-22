@@ -8,7 +8,7 @@ A multi-tier private network platform deployed across four macOS machines on a l
 
 ## Repository Structure
 
-The repository is structured into distinct phase directories to separate completed work from upcoming extensions:
+The repository is structured into distinct phase directories to organize the Phase 1 build and Phase 2 extensions:
 
 ```text
 Semester_5_Computer_Networks/
@@ -21,12 +21,11 @@ Semester_5_Computer_Networks/
 │   ├── scripts/                        # Automated setup, helper, and ping scripts
 │   └── README.md                       # Phase 1 documentation and operational manual
 │
-├── phase2/                             # Phase 2: High Availability & Security (Reserved)
-│   ├── src/                            # Phase 2 source code
+├── phase2/                             # Phase 2: High Availability & Security
 │   ├── config/                         # Phase 2 configuration variants (DNS, NGINX, PF)
 │   ├── scripts/                        # Phase 2 deployment and verification scripts
-│   ├── tests/                          # Phase 2 test suites
-│   └── README.md                       # Phase 2 reserved specifications
+│   ├── REPORT.md                       # Phase 2 rehearsal results
+│   └── README.md                       # Phase 2 operations and verification
 │
 ├── docs/                               # Shared Project Documentation
 │   ├── IP-inventory.md                 # Complete network inventory and machine assignments
@@ -45,7 +44,8 @@ Semester_5_Computer_Networks/
 │   │   ├── TLS/                        # TLS session negotiation evidence
 │   │   └── Failures/                   # Fault injection and negative test evidence
 │   │
-│   └── Phase-2/                        # Phase 2 evidence (reserved)
+│   ├── Phase-2/                        # Phase 2 evidence by extension
+│   └── README.md                       # Evidence checklist
 │
 ├── .env.example                        # Template for environment configuration
 ├── .gitignore                          # Git ignore rules for backups, certs, and pcaps
@@ -76,15 +76,15 @@ Phase 1 establishes the foundational infrastructure:
 - Application-level ETag caching validation (`If-None-Match` -> `304 Not Modified`)
 - Detailed documentation and operational guides located in **[phase1/README.md](phase1/README.md)**.
 
-### Phase 2: High Availability, Redundancy & Security (Upcoming)
+### Phase 2: High Availability, Redundancy & Security
 Phase 2 introduces enterprise resilience extensions:
 - Secondary Backup DNS resolver on Mac 4 with client failover
 - 30-second DNS TTL control and dynamic record cutover
 - macOS Packet Filter (PF) firewall anchors isolating backend ports
-- Open-source NGINX passive health checks and zero-drop upstream failover
+- NGINX passive failure detection and upstream retry
 - Active-standby edge migration (Mac 2 -> Mac 3)
 - Systematic 4-layer diagnostic troubleshooting protocol
-- Reserved directory located in **[phase2/README.md](phase2/README.md)**.
+- See the [Phase 2 runbook](phase2/README.md), [report](phase2/REPORT.md), and [evidence checklist](evidence/README.md).
 
 ---
 
