@@ -131,6 +131,7 @@ if [[ ! -f "${SSL_CERT}" || ! -f "${SSL_KEY}" ]]; then
         -keyout "${SSL_KEY}" \
         -out "${SSL_CERT}" \
         -subj "/CN=team1.test/O=ComputerNetworksProject" \
+        -addext "subjectAltName=DNS:${APP_DOMAIN},DNS:${API_DOMAIN}" \
         2>/dev/null
     log "Self-signed certificate generated at ${SSL_CERT}"
 fi
