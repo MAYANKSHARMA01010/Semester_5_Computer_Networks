@@ -4,10 +4,10 @@ set -Eeuo pipefail
 IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 # shellcheck disable=SC1091
-source "${ROOT_DIR}/scripts/helpers/common.sh"
+source "${SCRIPT_DIR}/../common.sh"
 
 # ============================================================
 # Load environment
@@ -30,7 +30,7 @@ require_local_ipv4 MAC_IP_2_NGINX_LOAD_BALANCER
 # Evidence output
 # ============================================================
 
-EVIDENCE_DIR="${ROOT_DIR}/evidence/LAN"
+EVIDENCE_DIR="${REPO_DIR}/evidence/Phase-1/LAN"
 OUTPUT_FILE="${EVIDENCE_DIR}/ping-Mac2-to-all.txt"
 
 mkdir -p "${EVIDENCE_DIR}"
