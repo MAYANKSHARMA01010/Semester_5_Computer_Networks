@@ -1,0 +1,14 @@
+interface=@INTERFACE@
+listen-address=127.0.0.1,@DNS_IP@
+bind-interfaces
+port=@DNS_PORT@
+domain-needed
+bogus-priv
+no-hosts
+no-resolv
+server=@FORWARDER@
+local-ttl=30
+host-record=@APP_DOMAIN@,@APP_IP@
+host-record=@API_DOMAIN@,@PRIMARY_IP@
+host-record=ttl-demo.team1.test,@TTL_IP@
+local=/team1.test/

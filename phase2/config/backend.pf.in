@@ -1,0 +1,2 @@
+pass in quick on @INTERFACE@ inet proto tcp from @EDGE_SOURCES@ to @BACKEND_IP@ port @BACKEND_PORT@ flags S/SA keep state
+block drop in quick on @INTERFACE@ proto tcp from any to any port @BACKEND_PORT@
