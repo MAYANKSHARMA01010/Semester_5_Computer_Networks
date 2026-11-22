@@ -75,3 +75,7 @@ ENV/
 *.tmp
 *.temp
 *~
+
+# Reviewed, lab-only packet captures for the final demonstration
+!/evidence/Phase-2/Packets/protocol-flow.pcapng
+!/evidence/Phase-2/Packets/backup-dns.pcapng
