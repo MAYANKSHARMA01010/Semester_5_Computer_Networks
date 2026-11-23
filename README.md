@@ -29,6 +29,7 @@ Semester_5_Computer_Networks/
 │
 ├── docs/                               # Shared Project Documentation
 │   ├── IP-inventory.md                 # Complete network inventory and machine assignments
+│   ├── phase2-architecture.md          # Phase 2 packet flow and firewall behavior
 │   ├── topology.png                    # Network topology diagram
 │   └── request-flow.png                # Client request flow diagram
 │
@@ -57,12 +58,35 @@ Semester_5_Computer_Networks/
 
 ## Network Architecture Summary
 
-| Machine | Role | IP Address (Default) | Services & Ports | Description |
+| Machine | Phase 1 Role | Phase 1 IP Address | Services & Ports | Description |
 |---|---|---|---|---|
 | **Mac 1** | Private DNS Server | `10.7.6.132` | `dnsmasq` (UDP/TCP 53) | Authoritative DNS for `app.team1.test` and `api.team1.test` |
 | **Mac 2** | Edge Load Balancer | `10.7.17.119` | `nginx` (TCP 8443) | Terminates TLS and load-balances across backends |
 | **Mac 3** | Application Backend A | `10.7.21.15` | Python HTTP (TCP 3001) | Application backend returning `{"backend": "A"}` |
 | **Mac 4** | Application Backend B | `10.7.5.213` | Python HTTP (TCP 3002) | Application backend returning `{"backend": "B"}` |
+
+### Phase 2 Network Topology
+
+The diagram uses the [Phase 2 rehearsal IP addresses](docs/IP-inventory.md). Dashed arrows show the fallback and cutover paths.
+
+```mermaid
+flowchart TD
+    Client["Demo client on private Wi-Fi"]
+    Mac1["Mac 1 · Aman · 10.7.1.188 · Primary DNS"]
+    Mac2["Mac 2 · Mayank · 10.7.28.47 · Primary NGINX"]
+    Mac3["Mac 3 · Ankit · 10.7.2.152 · Backend A and standby NGINX"]
+    Mac4["Mac 4 · Satyam · 10.7.29.127 · Backend B and backup DNS"]
+
+    Client -->|"DNS · UDP/TCP 53"| Mac1
+    Client -.->|"DNS fallback · UDP/TCP 53"| Mac4
+    Client -->|"HTTPS · TCP 8443"| Mac2
+    Client -.->|"HTTPS cutover · TCP 8443"| Mac3
+    Mac2 -->|"HTTP · TCP 3001"| Mac3
+    Mac2 -->|"HTTP · TCP 3002"| Mac4
+    Mac3 -.->|"Standby HTTP to Backend B · TCP 3002"| Mac4
+```
+
+Both DNS servers normally point `app.team1.test` and `api.team1.test` to Mac 2. During cutover, only `app.team1.test` moves to Mac 3. Standby NGINX reaches Backend A over loopback. macOS PF on Macs 3 and 4 restricts direct backend access and temporarily allows Mac 3 to reach Backend B during cutover. See the [Phase 2 request flow](docs/phase2-architecture.md) for more detail.
 
 ---
 

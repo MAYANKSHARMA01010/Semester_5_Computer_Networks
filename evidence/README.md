@@ -93,7 +93,7 @@ The first GET prints the response headers and discards the body. Look for HTTP 2
 
 ## Wireshark
 
-The [Phase 2 capture](Phase-2/Packets/protocol-flow.pcapng) contains 30 project packets from two Mac 2 captures. The [DNS screenshot](Phase-2/Packets/dns.png) shows the Wi-Fi query to `10.7.1.188` and the answer for `app.team1.test`. The [TCP screenshot](Phase-2/Packets/tcp.png) shows SYN, SYN-ACK and ACK on a loopback connection to the primary edge on port `8443`. The [TLS screenshot](Phase-2/Packets/tls.png) shows Client Hello with `app.team1.test` as SNI and the TLS 1.3 Server Hello on that connection. The browser stopped at the certificate trust warning. The [verified HTTPS screenshot](Phase-2/F-Troubleshooting/rehearsal-tls-retest.png) documents the separate successful HTTP request.
+The rehearsal capture in Git history contains 30 project packets from Mac 2. The [DNS screenshot](Phase-2/Packets/dns.png) shows Mac 2 (`10.7.28.47`) asking Mac 1 (`10.7.1.188`) for `app.team1.test`. The [TCP screenshot](Phase-2/Packets/tcp.png) shows the three-way handshake on Mac 2's loopback interface, and the [TLS screenshot](Phase-2/Packets/tls.png) shows Client Hello with `app.team1.test` as SNI and TLS 1.3 Server Hello on the same interface. The browser stopped at the certificate trust warning. The [verified HTTPS screenshot](Phase-2/F-Troubleshooting/rehearsal-tls-retest.png) documents the separate successful HTTP request.
 
 On a fresh checkout, run `mkdir -p evidence/Phase-2/Packets` before saving the capture. Use a client whose traffic crosses Wi-Fi to Mac 2, such as Aman on Mac 1 if his machine is configured as a demo client, or Ankit on Mac 3. A request from Mac 2 to Mac 2's own IP may traverse loopback instead of Wi-Fi. On the chosen client, start a capture on its Wi-Fi interface with this **capture filter**:
 
@@ -115,5 +115,17 @@ Stop the capture. Apply the display filter `dns.qry.name == "app.team1.test" || 
 | `dns.qry.name == "app.team1.test"` | `dns.png`. Expand the DNS answer and show the resolver IP and returned app address. |
 | `tcp.port == 8443` | `tcp.png`. Find the SYN, then apply `tcp.stream == N` using the matching stream index. Show SYN, SYN-ACK and ACK with the client ephemeral port and server port 8443. |
 | `tls && tcp.port == 8443` | `tls.png`. Show ClientHello, ServerHello, Certificate, ChangeCipherSpec and encrypted Application Data. If Wireshark does not automatically recognize port 8443, use Decode As → TLS for the stream. |
+
+### Private DNS and public NXDOMAIN
+
+On Ankit's Mac 3 (`10.7.2.152` during rehearsal), start a separate Wi-Fi capture with `port 53 and (host 10.7.1.188 or host 10.7.29.127 or host 1.1.1.1)`. Run the following to query both team resolvers and one public resolver directly.
+
+```bash
+dig @10.7.1.188 app.team1.test A +time=2 +tries=1
+dig @10.7.29.127 app.team1.test A +time=2 +tries=1
+dig @1.1.1.1 app.team1.test A +time=2 +tries=1
+```
+
+Apply `dns.qry.name == "app.team1.test" && dns.flags.response == 1`. Save `Packets/dns-split-behavior-public-nxdomain.png` when the packet list shows both private answers pointing to Mac 2 (`10.7.28.47`) and a public response with `NXDOMAIN` (`dns.flags.rcode == 3`). Expand the public response's DNS flags so the response code is visible. A timeout leaves the public DNS result unverified.
 
 For optional backup DNS packet evidence, capture the A outage lookup from Mac 2 with the narrow capture filter `port 53 and host 10.7.29.127`. Apply `dns.qry.name == "app.team1.test"` and export only displayed packets as `evidence/Phase-2/Packets/backup-dns.pcapng`. Review captures before adding them to Git, keeping only project traffic. Keep client trust bundles, private keys and PF tokens out of evidence.

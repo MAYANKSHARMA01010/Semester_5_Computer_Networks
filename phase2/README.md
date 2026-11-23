@@ -4,7 +4,8 @@ Phase 2 extends the Phase 1 backends and primary NGINX edge. Update the repo-roo
 
 - [Evidence checklist and commands](../evidence/README.md)
 - [Phase 2 report](REPORT.md)
-- [Phase 2 topology and request flow](../docs/phase2-architecture.md)
+- [Phase 2 network topology](../README.md#phase-2-network-topology)
+- [Phase 2 request flow](../docs/phase2-architecture.md)
 
 ## Repository layout
 

@@ -23,7 +23,7 @@ The [initial primary HTTPS check](../evidence/Phase-2/F-Troubleshooting/rehearsa
 
 The [cache validation transcript](../evidence/Phase-2/HTTPS/cache-headers-and-304.png) shows HTTP 200 from Backend B with `Cache-Control: public, max-age=60` and `ETag: "status-v1"`. The conditional GET with that ETag returned HTTP 304 from Backend A. Both servers use the same fixed ETag for the lab endpoint, though their JSON bodies contain different backend IDs.
 
-The [Phase 2 Wireshark capture](../evidence/Phase-2/Packets/protocol-flow.pcapng) combines the DNS query and answer captured on Mac 2's Wi-Fi with TCP and TLS records captured on Mac 2's loopback interface. The [packet screenshots](../evidence/README.md#wireshark) show the DNS answer, the TCP three-way handshake and the TLS Client and Server Hello. The browser stopped at the certificate trust warning. The verified HTTP 200 was recorded separately with curl.
+The [Phase 2 packet screenshots](../evidence/README.md#wireshark) show the DNS query and answer captured on Mac 2's Wi-Fi, followed by the TCP three-way handshake and the TLS Client and Server Hello captured on Mac 2's loopback interface. The browser stopped at the certificate trust warning. The verified HTTP 200 was recorded separately with curl.
 
 ## Learning by extension
 
